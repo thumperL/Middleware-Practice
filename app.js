@@ -6,7 +6,10 @@ const middleware = require('./middleware/index');
 const app = express();
 const port = 3000;
 
-app.get('/', middleware.logRequest, (req, res) => {
+// Global middleware implementation
+app.use(middleware.logBenchmark);
+
+app.get('/', (req, res) => {
   res.send(`
     列出全部 Todo
     <br>> <a href="/">列出全部 Todo 頁面</a>
@@ -26,18 +29,18 @@ app.get('/', middleware.logRequest, (req, res) => {
   `);
 });
 
-app.get('/new', middleware.logRequest, (req, res) => {
+app.get('/new', (req, res) => {
   res.send('新增 Todo 頁面<br><a href="/">Back</a>');
 });
 
-app.get('/:id', middleware.logRequest, (req, res) => {
+app.get('/:id', (req, res) => {
   res.send('顯示一筆 Todo<br><a href="/">Back</a>');
 });
 
-app.post('/', middleware.logRequest, (req, res) => {
+app.post('/', (req, res) => {
   res.send('新增一筆  Todo');
 });
 
-app.listen(port, middleware.logRequest, () => {
+app.listen(port, () => {
   console.log(`App running on port ${port}`);
 });

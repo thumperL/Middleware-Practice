@@ -1,20 +1,42 @@
-const logRequest = async (req, res, next) => {
-  if (req.url === '/favicon.ico') {
-    // Due to having html from send, the browser is somehow asking for favico...
-    next();
-  } else {
-    const currentTimeStamp = new Date();
-    const year = `${currentTimeStamp.getFullYear()}`;
-    const month = `${currentTimeStamp.getMonth() + 1}`.padStart(2, '0');
-    const date = `${currentTimeStamp.getDate()}`.padStart(2, '0');
+const process = require('process');
 
-    const hour = `${currentTimeStamp.getHours() + 1}`.padStart(2, '0');
-    const minute = `${currentTimeStamp.getMinutes() + 1}`.padStart(2, '0');
-    const second = `${currentTimeStamp.getSeconds()}`.padStart(2, '0');
+function getDateTimeString() {
+  const currentTimestamp = new Date();
+  const year = `${currentTimestamp.getFullYear()}`;
+  const month = `${currentTimestamp.getMonth() + 1}`.padStart(2, '0');
+  const date = `${currentTimestamp.getDate()}`.padStart(2, '0');
 
-    // Output to log
-    console.log(`${year}-${month}-${date} ${hour}:${minute}:${second} | ${req.method} from ${req.url}`);
-    next();
+  const hour = `${currentTimestamp.getHours() + 1}`.padStart(2, '0');
+  const minute = `${currentTimestamp.getMinutes() + 1}`.padStart(2, '0');
+  const second = `${currentTimestamp.getSeconds()}`.padStart(2, '0');
+
+  return `${year}-${month}-${date} ${hour}:${minute}:${second}`;
+}
+
+function getRequestString(req, res, next) {
+  return `${req.method} from ${req.originalUrl}`;
+}
+
+function getDurationInMillisecondsString(diff) {
+  const NS_PER_SEC = 1e9;
+  const NS_TO_MS = 1e6;
+
+  return `${((diff[0] * NS_PER_SEC + diff[1]) / NS_TO_MS).toLocaleString()} ms`;
+}
+
+const logBenchmark = async (req, res, next) => {
+  // Due to having html from send, the browser is somehow asking for favico...
+  if (req.originalUrl !== '/favicon.ico') {
+    // Get process start time
+    const start = process.hrtime();
+
+    // Capture response on close to client
+    res.on('close', () => {
+      const diff = process.hrtime(start);
+      console.log(`${getDateTimeString()} | ${getRequestString(req)} | total time: ${getDurationInMillisecondsString(diff)}`);
+    });
   }
+  next();
 };
-module.exports = { logRequest };
+
+module.exports = { logBenchmark };
